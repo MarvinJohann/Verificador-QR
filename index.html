@@ -2,129 +2,109 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Verificador — Xóchitl & Sarbjit</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{--gold:#C8965A;--pk:#D4608A;--cream:#FEF9F6;--text:#1A0C10;--green:#2E7D52;--red:#C0392B;}
-body{background:#1A0C10;color:white;font-family:'Montserrat',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
-
-/* HEADER */
-.hdr{text-align:center;padding:20px 16px 12px;border-bottom:1px solid rgba(200,150,90,.2);}
-.hdr-script{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.9rem;background:linear-gradient(160deg,#FFE08A,#C8860A 30%,#F5D060 60%,#8B5E08);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.hdr-sub{font-size:.52rem;letter-spacing:4px;text-transform:uppercase;color:rgba(200,150,90,.7);margin-top:3px;}
-
-/* TABS */
-.tabs{display:flex;border-bottom:1px solid rgba(200,150,90,.2);}
-.tab{flex:1;padding:13px;text-align:center;font-size:.58rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer;color:rgba(255,255,255,.4);border:none;background:none;transition:all .25s;}
+body{background:#1A0C10;color:white;font-family:'Montserrat',sans-serif;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+.hdr{text-align:center;padding:14px 16px 10px;border-bottom:1px solid rgba(200,150,90,.2);flex-shrink:0;}
+.hdr-script{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.7rem;background:linear-gradient(160deg,#FFE08A,#C8860A 30%,#F5D060 60%,#8B5E08);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hdr-sub{font-size:.48rem;letter-spacing:4px;text-transform:uppercase;color:rgba(200,150,90,.7);margin-top:2px;}
+.tabs{display:flex;border-bottom:1px solid rgba(200,150,90,.2);flex-shrink:0;}
+.tab{flex:1;padding:11px;text-align:center;font-size:.55rem;letter-spacing:2px;text-transform:uppercase;cursor:pointer;color:rgba(255,255,255,.4);border:none;background:none;transition:all .25s;}
 .tab.active{color:var(--gold);border-bottom:2px solid var(--gold);}
 
 /* SCANNER */
-.scanner-wrap{position:relative;flex:1;display:flex;flex-direction:column;}
-#cam-view{width:100%;flex:1;object-fit:cover;display:block;max-height:calc(100vh - 200px);}
+#panel-scan{flex:1;position:relative;display:flex;flex-direction:column;overflow:hidden;}
+#cam-view{width:100%;flex:1;object-fit:cover;display:block;}
 .cam-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
-.cam-frame{width:min(260px,70vw);height:min(260px,70vw);position:relative;}
-.cam-corner{position:absolute;width:28px;height:28px;border-color:var(--gold);border-style:solid;border-width:0;}
+.cam-frame{width:min(240px,65vw);height:min(240px,65vw);position:relative;}
+.cam-corner{position:absolute;width:24px;height:24px;border-color:var(--gold);border-style:solid;border-width:0;}
 .cam-corner.tl{top:0;left:0;border-top-width:3px;border-left-width:3px;}
 .cam-corner.tr{top:0;right:0;border-top-width:3px;border-right-width:3px;}
 .cam-corner.bl{bottom:0;left:0;border-bottom-width:3px;border-left-width:3px;}
 .cam-corner.br{bottom:0;right:0;border-bottom-width:3px;border-right-width:3px;}
 .scan-line{position:absolute;left:4px;right:4px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:scanMove 2s ease-in-out infinite;}
-@keyframes scanMove{0%,100%{top:4px;opacity:.8}50%{top:calc(100% - 6px);opacity:1}}
-.scan-hint{position:absolute;bottom:20px;left:0;right:0;text-align:center;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);}
-#cam-status{position:absolute;top:0;left:0;right:0;background:rgba(0,0,0,.5);padding:8px;text-align:center;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.7);}
-#scan-active{position:absolute;top:12px;right:12px;width:10px;height:10px;border-radius:50%;background:#2E7D52;box-shadow:0 0 6px #2E7D52;animation:blink 1s ease-in-out infinite;z-index:5;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes scanMove{0%,100%{top:4px}50%{top:calc(100% - 6px)}}
+#debug-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);padding:6px 10px;font-size:.52rem;color:rgba(255,255,255,.6);text-align:center;letter-spacing:1px;}
+#scan-dot{position:absolute;top:10px;right:10px;width:10px;height:10px;border-radius:50%;background:#2E7D52;box-shadow:0 0 6px #2E7D52;animation:blink 1s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
 /* RESULT */
-.result-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s;background:rgba(26,12,16,.92);}
+.result-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .3s;background:rgba(26,12,16,.95);}
 .result-overlay.show{opacity:1;pointer-events:all;}
-.result-box{width:100%;max-width:340px;border-radius:4px;overflow:hidden;text-align:center;}
-.result-top{padding:28px 20px 20px;}
-.result-icon{font-size:3.5rem;line-height:1;margin-bottom:12px;}
-.result-status{font-size:.58rem;letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;}
-.result-name{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;margin-bottom:4px;}
-.result-code{font-size:.58rem;letter-spacing:3px;opacity:.7;margin-bottom:8px;}
-.result-adults{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;padding:6px 14px;background:rgba(255,255,255,.12);display:inline-block;margin-bottom:14px;border-radius:2px;}
-.result-already{font-size:.65rem;color:rgba(255,200,0,.9);letter-spacing:1px;margin-bottom:6px;}
-.result-checkin-time{font-size:.6rem;opacity:.6;}
+.result-box{width:100%;max-width:320px;border-radius:4px;overflow:hidden;text-align:center;}
+.result-top{padding:24px 18px 18px;}
+.result-icon{font-size:3rem;line-height:1;margin-bottom:10px;}
+.result-status{font-size:.55rem;letter-spacing:4px;text-transform:uppercase;margin-bottom:6px;}
+.result-name{font-family:'Cormorant Garamond',serif;font-size:1.8rem;margin-bottom:3px;}
+.result-code{font-size:.52rem;letter-spacing:3px;opacity:.6;margin-bottom:6px;}
+.result-adults{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;padding:5px 12px;background:rgba(255,255,255,.12);display:inline-block;margin-bottom:10px;border-radius:2px;}
+.result-extra{font-size:.6rem;color:rgba(255,200,0,.9);margin-bottom:4px;}
 .result-ok{background:linear-gradient(160deg,#1a4a2e,#2E7D52);}
 .result-err{background:linear-gradient(160deg,#4a1a1a,#C0392B);}
 .result-warn{background:linear-gradient(160deg,#4a3a10,#8B6010);}
-.result-btn{width:100%;padding:14px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:.6rem;letter-spacing:3px;text-transform:uppercase;font-weight:600;background:rgba(255,255,255,.15);color:white;}
-.result-btn:hover{background:rgba(255,255,255,.25);}
+.result-btn{width:100%;padding:13px;border:none;cursor:pointer;font-family:'Montserrat',sans-serif;font-size:.58rem;letter-spacing:3px;text-transform:uppercase;font-weight:600;background:rgba(255,255,255,.15);color:white;}
 
-/* MANUAL TAB */
-.manual-wrap{flex:1;padding:24px 20px;display:none;}
-.manual-wrap.active{display:block;}
-.m-label{display:block;font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
-.m-input{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(200,150,90,.35);color:white;padding:13px 14px;font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-style:italic;letter-spacing:2px;outline:none;text-transform:uppercase;margin-bottom:14px;}
-.m-input::placeholder{color:rgba(255,255,255,.25);text-transform:none;}
-.m-btn{width:100%;padding:14px;background:rgba(200,150,90,.15);border:1px solid var(--gold);color:var(--gold);font-family:'Montserrat',sans-serif;font-size:.58rem;letter-spacing:4px;text-transform:uppercase;cursor:pointer;}
-.m-btn:hover{background:rgba(200,150,90,.25);}
-.m-or{text-align:center;font-size:.55rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.3);margin:20px 0;}
+/* MANUAL */
+#panel-manual{flex:1;padding:20px;display:none;overflow-y:auto;}
+.m-label{display:block;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:7px;}
+.m-input{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(200,150,90,.35);color:white;padding:12px 14px;font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;letter-spacing:2px;outline:none;text-transform:uppercase;margin-bottom:12px;}
+.m-input::placeholder{color:rgba(255,255,255,.25);text-transform:none;font-size:.9rem;}
+.m-btn{width:100%;padding:13px;background:rgba(200,150,90,.15);border:1px solid var(--gold);color:var(--gold);font-family:'Montserrat',sans-serif;font-size:.55rem;letter-spacing:4px;text-transform:uppercase;cursor:pointer;margin-bottom:16px;}
+.m-or{text-align:center;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.25);margin:4px 0 16px;}
 
-/* LOG TAB */
-.log-wrap{flex:1;padding:16px;overflow-y:auto;display:none;}
-.log-wrap.active{display:block;}
-.log-item{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px;}
-.log-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.log-dot.ok{background:#2E7D52;}
-.log-dot.err{background:#C0392B;}
-.log-dot.dup{background:#8B6010;}
+/* LOG */
+#panel-log{flex:1;overflow-y:auto;display:none;}
+.log-item{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;}
+.log-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.log-dot.ok{background:#2E7D52;}.log-dot.err{background:#C0392B;}.log-dot.dup{background:#8B6010;}
 .log-info{flex:1;}
-.log-name{font-family:'Cormorant Garamond',serif;font-size:.95rem;font-style:italic;}
-.log-code{font-size:.5rem;letter-spacing:2px;text-transform:uppercase;opacity:.5;margin-top:2px;}
-.log-time{font-size:.5rem;opacity:.4;text-align:right;white-space:nowrap;}
-.log-empty{text-align:center;padding:40px 20px;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.2);}
+.log-name{font-family:'Cormorant Garamond',serif;font-size:.9rem;font-style:italic;}
+.log-code{font-size:.48rem;letter-spacing:2px;text-transform:uppercase;opacity:.45;margin-top:1px;}
+.log-time{font-size:.48rem;opacity:.35;white-space:nowrap;}
+.log-empty{text-align:center;padding:36px 20px;font-size:.55rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.2);}
 
-/* LOADING */
+.no-cam{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;gap:10px;}
+.no-cam-icon{font-size:2.8rem;}
+.no-cam-txt{font-size:.58rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);line-height:2;}
 .loading{display:none;position:absolute;inset:0;background:rgba(26,12,16,.85);align-items:center;justify-content:center;z-index:10;}
 .loading.show{display:flex;}
-.spinner{width:40px;height:40px;border:3px solid rgba(200,150,90,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+.spinner{width:36px;height:36px;border:3px solid rgba(200,150,90,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* NO CAM */
-.no-cam{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;gap:12px;}
-.no-cam-icon{font-size:3rem;}
-.no-cam-txt{font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);line-height:2;}
 </style>
 </head>
 <body>
-
 <div class="hdr">
   <div class="hdr-script">Xóchitl & Sarbjit</div>
-  <div class="hdr-sub">Verificador de Invitados · 3 Jul 2026</div>
+  <div class="hdr-sub">Verificador · 3 Jul 2026</div>
 </div>
-
 <div class="tabs">
-  <button class="tab active" id="tab-scan">&#128247; Escanear</button>
-  <button class="tab" id="tab-manual">&#9000; Manual</button>
-  <button class="tab" id="tab-log">&#128203; Registro</button>
+  <button class="tab active" id="tab-scan">📷 Escanear</button>
+  <button class="tab" id="tab-manual">⌨️ Manual</button>
+  <button class="tab" id="tab-log">📋 Registro</button>
 </div>
 
 <!-- SCANNER -->
-<div class="scanner-wrap" id="panel-scan">
+<div id="panel-scan">
   <div id="no-cam-msg" class="no-cam" style="display:none;">
     <div class="no-cam-icon">📵</div>
-    <div class="no-cam-txt">No se pudo acceder a la cámara.<br>Usa la pestaña Manual.</div>
+    <div class="no-cam-txt">Sin acceso a cámara.<br>Usa la pestaña Manual.</div>
   </div>
   <video id="cam-view" autoplay playsinline muted></video>
   <canvas id="cam-canvas" style="display:none;"></canvas>
-  <div id="scan-active" style="display:none;"></div>
-  <div id="cam-status">Iniciando cámara...</div>
+  <div id="scan-dot" style="display:none;"></div>
   <div class="cam-overlay">
     <div class="cam-frame">
-      <div class="cam-corner tl"></div>
-      <div class="cam-corner tr"></div>
-      <div class="cam-corner bl"></div>
-      <div class="cam-corner br"></div>
+      <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
+      <div class="cam-corner bl"></div><div class="cam-corner br"></div>
       <div class="scan-line"></div>
     </div>
   </div>
-  <div class="scan-hint">Apunta al código QR del invitado</div>
+  <div id="debug-bar">Iniciando cámara...</div>
   <div class="result-overlay" id="result-overlay">
     <div class="result-box" id="result-box">
       <div class="result-top" id="result-top">
@@ -133,76 +113,88 @@ body{background:#1A0C10;color:white;font-family:'Montserrat',sans-serif;min-heig
         <div class="result-name" id="result-name"></div>
         <div class="result-code" id="result-code"></div>
         <div class="result-adults" id="result-adults"></div>
-        <div class="result-already" id="result-already" style="display:none;"></div>
-        <div class="result-checkin-time" id="result-checkin-time" style="display:none;"></div>
+        <div class="result-extra" id="result-extra" style="display:none;"></div>
       </div>
-      <button class="result-btn" id="result-btn">&#8592; Seguir escaneando</button>
+      <button class="result-btn" id="result-btn">← Seguir escaneando</button>
     </div>
   </div>
   <div class="loading" id="loading"><div class="spinner"></div></div>
 </div>
 
 <!-- MANUAL -->
-<div class="manual-wrap" id="panel-manual">
+<div id="panel-manual">
   <label class="m-label">Código de confirmación</label>
   <input class="m-input" id="manual-code" type="text" placeholder="Ej: CONF-A3K8JX2P" maxlength="14">
-  <button class="m-btn" id="manual-btn">&#10003; Verificar código</button>
-  <div class="m-or">— o ingresa nombre —</div>
-  <label class="m-label">Buscar por nombre</label>
-  <input class="m-input" id="manual-name" type="text" placeholder="Nombre del invitado">
-  <button class="m-btn" id="manual-name-btn" style="margin-top:0;">&#128269; Buscar</button>
+  <button class="m-btn" id="manual-btn">✓ Verificar código</button>
+  <div class="m-or">— o busca por nombre —</div>
+  <label class="m-label">Nombre del invitado</label>
+  <input class="m-input" id="manual-name" type="text" placeholder="Nombre completo">
+  <button class="m-btn" id="manual-name-btn">🔍 Buscar</button>
 </div>
 
 <!-- LOG -->
-<div class="log-wrap" id="panel-log">
+<div id="panel-log">
   <div id="log-list"><div class="log-empty">Sin registros aún</div></div>
 </div>
 
 <script>
 var SHEET_URL='https://script.google.com/macros/s/AKfycbzOIWq-icHJdBdNeJMfCCDpcMmuz1K6NWpSiejkjwMk0NgZRbUaWUB10_5finf4D3jFbA/exec';
-var scanning=false,stream=null,rafId=null,lastCode='',lastCodeTime=0,cooldown=3000;
+var scanning=false,stream=null,rafId=null,lastCode='',lastCodeTime=0,cooldown=4000;
 var log=[];
+var barcodeDetector=null;
 
 /* ── TABS ── */
 function showPanel(name){
   ['scan','manual','log'].forEach(function(p){
     var panel=document.getElementById('panel-'+p);
     var tab=document.getElementById('tab-'+p);
-    if(p===name){panel.style.display='flex';tab.classList.add('active');}
-    else{panel.style.display='none';tab.classList.remove('active');}
+    var isCur=p===name;
+    panel.style.display=isCur?'flex':'none';
+    tab.classList.toggle('active',isCur);
   });
-  if(name==='scan'&&stream)startScan();
-  else stopScan();
+  if(name==='scan'){if(stream)startScan();}
+  else{stopScan();}
+  if(name==='log')renderLog();
 }
 document.getElementById('tab-scan').addEventListener('click',function(){showPanel('scan');});
 document.getElementById('tab-manual').addEventListener('click',function(){showPanel('manual');});
-document.getElementById('tab-log').addEventListener('click',function(){showPanel('log');renderLog();});
+document.getElementById('tab-log').addEventListener('click',function(){showPanel('log');});
 
 /* ── CAMERA ── */
 function initCam(){
+  /* Intentar BarcodeDetector nativo primero */
+  if('BarcodeDetector' in window){
+    BarcodeDetector.getSupportedFormats().then(function(fmts){
+      if(fmts.indexOf('qr_code')>-1){
+        barcodeDetector=new BarcodeDetector({formats:['qr_code']});
+        setDebug('BarcodeDetector nativo activo');
+      }
+    }).catch(function(){});
+  }
+
   navigator.mediaDevices.getUserMedia({
-    video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},
+    video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},
     audio:false
-  })
-    .then(function(s){
-      stream=s;
-      var video=document.getElementById('cam-view');
-      video.srcObject=s;
-      video.setAttribute('playsinline','true');
-      video.onloadedmetadata=function(){
-        video.play();
-        document.getElementById('cam-status').style.display='none';
-        var dot=document.getElementById('scan-active');
-        if(dot)dot.style.display='block';
-        startScan();
-      };
-    })
-    .catch(function(err){
-      console.error('Cam error:',err);
-      document.getElementById('cam-view').style.display='none';
-      document.getElementById('no-cam-msg').style.display='flex';
-      document.getElementById('cam-status').innerHTML='Sin acceso a cámara';
-    });
+  }).then(function(s){
+    stream=s;
+    var video=document.getElementById('cam-view');
+    video.srcObject=s;
+    video.setAttribute('playsinline','true');
+    video.play().then(function(){
+      document.getElementById('scan-dot').style.display='block';
+      setDebug('Cámara lista · Apunta al QR');
+      startScan();
+    }).catch(function(e){setDebug('Error play: '+e.message);});
+  }).catch(function(e){
+    document.getElementById('cam-view').style.display='none';
+    document.getElementById('no-cam-msg').style.display='flex';
+    setDebug('Sin cámara: '+e.message);
+  });
+}
+
+function setDebug(msg){
+  var el=document.getElementById('debug-bar');
+  if(el)el.innerHTML=msg;
 }
 
 function startScan(){
@@ -211,26 +203,54 @@ function startScan(){
   var video=document.getElementById('cam-view');
   var canvas=document.getElementById('cam-canvas');
   var ctx=canvas.getContext('2d',{willReadFrequently:true});
+  var frameCount=0;
 
   function tick(){
     if(!scanning)return;
-    if(video.readyState>=2&&video.videoWidth>0){
-      var w=video.videoWidth, h=video.videoHeight;
-      canvas.width=w; canvas.height=h;
-      ctx.drawImage(video,0,0,w,h);
-      try{
-        var img=ctx.getImageData(0,0,w,h);
-        var code=jsQR(img.data,img.width,img.height,{inversionAttempts:'both'});
-        if(code&&code.data){
+    frameCount++;
+
+    /* Cada 3 frames para no sobrecargar */
+    if(frameCount%3!==0){rafId=requestAnimationFrame(tick);return;}
+
+    if(!video.videoWidth||video.paused||video.ended){rafId=requestAnimationFrame(tick);return;}
+
+    var w=video.videoWidth,h=video.videoHeight;
+    canvas.width=w;canvas.height=h;
+    ctx.drawImage(video,0,0,w,h);
+
+    /* Método 1: BarcodeDetector nativo */
+    if(barcodeDetector){
+      barcodeDetector.detect(canvas).then(function(codes){
+        if(codes.length>0){
+          var raw=codes[0].rawValue;
           var now=Date.now();
-          if(code.data!==lastCode||now-lastCodeTime>cooldown){
-            lastCode=code.data;lastCodeTime=now;
-            onQRDetected(code.data);
+          if(raw!==lastCode||now-lastCodeTime>cooldown){
+            lastCode=raw;lastCodeTime=now;
+            setDebug('QR detectado (nativo)');
+            onQRDetected(raw);
             return;
           }
         }
-      }catch(e){}
+        rafId=requestAnimationFrame(tick);
+      }).catch(function(){rafId=requestAnimationFrame(tick);});
+      return;
     }
+
+    /* Método 2: jsQR */
+    try{
+      var imageData=ctx.getImageData(0,0,w,h);
+      var code=jsQR(imageData.data,imageData.width,imageData.height,{inversionAttempts:'both'});
+      if(code&&code.data){
+        var now=Date.now();
+        if(code.data!==lastCode||now-lastCodeTime>cooldown){
+          lastCode=code.data;lastCodeTime=now;
+          setDebug('QR detectado (jsQR)');
+          onQRDetected(code.data);
+          return;
+        }
+      }
+    }catch(e){}
+
     rafId=requestAnimationFrame(tick);
   }
   rafId=requestAnimationFrame(tick);
@@ -240,34 +260,40 @@ function stopScan(){scanning=false;if(rafId)cancelAnimationFrame(rafId);}
 
 function onQRDetected(raw){
   stopScan();
+  setDebug('Procesando: '+raw.substring(0,30)+'...');
   var confMatch=raw.match(/CONF-[A-Z0-9]{8}/);
-  if(!confMatch){showResult('err',null,'QR no reconocido','El código QR no corresponde a una invitación válida.','','');return;}
-  var code=confMatch[0];
-  verifyCode(code);
+  if(!confMatch){
+    setDebug('QR no reconocido: '+raw.substring(0,40));
+    showResult('err',null,'QR no válido','El código no corresponde a una invitación.','','');
+    return;
+  }
+  verifyCode(confMatch[0]);
 }
 
 /* ── VERIFY ── */
 function verifyCode(code){
   showLoading(true);
+  setDebug('Verificando '+code+'...');
   fetch(SHEET_URL+'?action=verify&code='+encodeURIComponent(code))
     .then(function(r){return r.json();})
     .then(function(d){
       showLoading(false);
       if(d.found){
         if(d.checkedIn){
-          showResult('warn',d,'Ya registrado','Este invitado ya fue registrado al evento.',code,d.adults);
-          addLog('dup',d.nombre+(d.apellido?' '+d.apellido:''),code);
+          showResult('warn',d,'Ya registrado','Este invitado ya entró al evento.',code,d.adults);
+          addLog('dup',(d.nombre||'')+' '+(d.apellido||''),code);
         } else {
           markCheckedIn(code,d);
         }
       } else {
-        showResult('err',null,'No encontrado','Este código no está registrado en la lista de invitados.',code,'');
-        addLog('err','Código: '+code,code);
+        showResult('err',null,'No encontrado','Código no está en la lista de invitados.',code,'');
+        addLog('err','No encontrado',code);
       }
     })
-    .catch(function(){
+    .catch(function(e){
       showLoading(false);
-      showResult('err',null,'Error de conexión','No se pudo verificar. Revisa tu conexión a internet.',code,'');
+      setDebug('Error: '+e.message);
+      showResult('err',null,'Error de conexión','Revisa tu internet e intenta de nuevo.',code,'');
     });
 }
 
@@ -275,10 +301,11 @@ function markCheckedIn(code,d){
   fetch(SHEET_URL+'?action=checkin&code='+encodeURIComponent(code))
     .then(function(){
       showResult('ok',d,'¡Bienvenido!','Invitado verificado correctamente.',code,d.adults);
-      addLog('ok',d.nombre+(d.apellido?' '+d.apellido:''),code);
+      addLog('ok',(d.nombre||'')+' '+(d.apellido||''),code);
     })
     .catch(function(){
-      showResult('ok',d,'¡Bienvenido!','Invitado verificado (sin conexión para marcar).',code,d.adults);
+      showResult('ok',d,'¡Bienvenido!','Verificado (sin conexión para marcar).',code,d.adults);
+      addLog('ok',(d.nombre||'')+' '+(d.apellido||''),code);
     });
 }
 
@@ -286,43 +313,24 @@ function markCheckedIn(code,d){
 function showResult(type,data,status,msg,code,adults){
   var overlay=document.getElementById('result-overlay');
   var box=document.getElementById('result-box');
-  var icon=document.getElementById('result-icon');
-  var stEl=document.getElementById('result-status');
-  var nameEl=document.getElementById('result-name');
-  var codeEl=document.getElementById('result-code');
-  var adultsEl=document.getElementById('result-adults');
-  var alreadyEl=document.getElementById('result-already');
-  var timeEl=document.getElementById('result-checkin-time');
-
-  box.className='result-box result-'+( type==='ok'?'ok':type==='warn'?'warn':'err');
-  icon.innerHTML=type==='ok'?'✅':type==='warn'?'⚠️':'❌';
-  stEl.innerHTML=status;
-  nameEl.innerHTML=data?(data.nombre+(data.apellido?' '+data.apellido:'')):'';
-  codeEl.innerHTML=code||'';
-  adultsEl.innerHTML=adults?(adults+' adulto'+(adults!=1?'s':'')):'';
-  alreadyEl.style.display='none';
-  timeEl.style.display='none';
-
-  if(type==='warn'&&data&&data.checkinTime){
-    alreadyEl.style.display='block';
-    alreadyEl.innerHTML='Ya registrado el '+data.checkinTime;
-    timeEl.style.display='none';
-  }
-  if(type==='ok'){
-    timeEl.style.display='block';
-    timeEl.innerHTML='Registrado: '+new Date().toLocaleTimeString('es-MX');
-  }
-
+  document.getElementById('result-icon').innerHTML=type==='ok'?'✅':type==='warn'?'⚠️':'❌';
+  document.getElementById('result-status').innerHTML=status;
+  document.getElementById('result-name').innerHTML=data?(data.nombre||'')+' '+(data.apellido||''):'';
+  document.getElementById('result-code').innerHTML=code||'';
+  document.getElementById('result-adults').innerHTML=adults?(adults+' adulto'+(adults!=1?'s':'')):'';
+  var extra=document.getElementById('result-extra');
+  if(type==='warn'&&data&&data.checkinTime){extra.style.display='block';extra.innerHTML='Entró el: '+data.checkinTime;}
+  else{extra.style.display='none';}
+  box.className='result-box result-'+(type==='ok'?'ok':type==='warn'?'warn':'err');
   overlay.classList.add('show');
-  if(type==='ok'){
-    navigator.vibrate&&navigator.vibrate([100,50,100]);
-  }
+  if(type==='ok')navigator.vibrate&&navigator.vibrate([100,50,200]);
 }
 
 document.getElementById('result-btn').addEventListener('click',function(){
   document.getElementById('result-overlay').classList.remove('show');
   lastCode='';lastCodeTime=0;
-  setTimeout(function(){startScan();},300);
+  setDebug('Cámara lista · Apunta al QR');
+  setTimeout(startScan,300);
 });
 
 /* ── MANUAL ── */
@@ -346,10 +354,9 @@ document.getElementById('manual-name-btn').addEventListener('click',function(){
       showLoading(false);
       if(d.found){
         showResult(d.checkedIn?'warn':'ok',d,d.checkedIn?'Ya registrado':'Encontrado',
-          d.checkedIn?'Este invitado ya fue registrado.':'Invitado encontrado en la lista.',
-          d.confirmacion,d.adults);
+          d.checkedIn?'Este invitado ya entró.':'Invitado en la lista.',d.confirmacion,d.adults);
       } else {
-        showResult('err',null,'No encontrado','Nombre no encontrado en la lista.',name,'');
+        showResult('err',null,'No encontrado','Nombre no está en la lista.',name,'');
       }
     })
     .catch(function(){showLoading(false);showResult('err',null,'Error','Sin conexión.',name,'');});
@@ -357,24 +364,36 @@ document.getElementById('manual-name-btn').addEventListener('click',function(){
 
 /* ── LOG ── */
 function addLog(type,name,code){
-  log.unshift({type:type,name:name,code:code,time:new Date().toLocaleTimeString('es-MX')});
+  log.unshift({type:type,name:name.trim(),code:code,time:new Date().toLocaleTimeString('es-MX')});
   if(log.length>50)log.pop();
+  /* Actualizar badge */
+  var tab=document.getElementById('tab-log');
+  if(tab)tab.innerHTML='📋 Registro ('+log.length+')';
 }
 function renderLog(){
   var el=document.getElementById('log-list');
   if(!log.length){el.innerHTML='<div class="log-empty">Sin registros aún</div>';return;}
   el.innerHTML=log.map(function(e){
-    return '<div class="log-item"><div class="log-dot '+e.type+'"></div><div class="log-info"><div class="log-name">'+e.name+'</div><div class="log-code">'+e.code+'</div></div><div class="log-time">'+e.time+'</div></div>';
+    return '<div class="log-item"><div class="log-dot '+e.type+'"></div>'
+      +'<div class="log-info"><div class="log-name">'+e.name+'</div><div class="log-code">'+e.code+'</div></div>'
+      +'<div class="log-time">'+e.time+'</div></div>';
   }).join('');
 }
 
-/* ── LOADING ── */
 function showLoading(on){document.getElementById('loading').classList[on?'add':'remove']('show');}
 
 /* ── INIT ── */
-showPanel('scan');
-if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){initCam();}
-else{document.getElementById('cam-view').style.display='none';document.getElementById('no-cam-msg').style.display='flex';}
+document.getElementById('panel-manual').style.display='none';
+document.getElementById('panel-log').style.display='none';
+document.getElementById('panel-scan').style.display='flex';
+
+if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+  initCam();
+} else {
+  document.getElementById('cam-view').style.display='none';
+  document.getElementById('no-cam-msg').style.display='flex';
+  setDebug('getUserMedia no soportado');
+}
 </script>
 </body>
 </html>
