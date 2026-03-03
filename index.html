@@ -34,7 +34,9 @@ body{background:#1A0C10;color:white;font-family:'Montserrat',sans-serif;min-heig
 .scan-line{position:absolute;left:4px;right:4px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:scanMove 2s ease-in-out infinite;}
 @keyframes scanMove{0%,100%{top:4px;opacity:.8}50%{top:calc(100% - 6px);opacity:1}}
 .scan-hint{position:absolute;bottom:20px;left:0;right:0;text-align:center;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);}
-#cam-status{position:absolute;top:0;left:0;right:0;background:rgba(0,0,0,.5);padding:8px;text-align:center;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);}
+#cam-status{position:absolute;top:0;left:0;right:0;background:rgba(0,0,0,.5);padding:8px;text-align:center;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.7);}
+#scan-active{position:absolute;top:12px;right:12px;width:10px;height:10px;border-radius:50%;background:#2E7D52;box-shadow:0 0 6px #2E7D52;animation:blink 1s ease-in-out infinite;z-index:5;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* RESULT */
 .result-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s;background:rgba(26,12,16,.92);}
@@ -111,6 +113,7 @@ body{background:#1A0C10;color:white;font-family:'Montserrat',sans-serif;min-heig
   </div>
   <video id="cam-view" autoplay playsinline muted></video>
   <canvas id="cam-canvas" style="display:none;"></canvas>
+  <div id="scan-active" style="display:none;"></div>
   <div id="cam-status">Iniciando cámara...</div>
   <div class="cam-overlay">
     <div class="cam-frame">
@@ -177,14 +180,25 @@ document.getElementById('tab-log').addEventListener('click',function(){showPanel
 
 /* ── CAMERA ── */
 function initCam(){
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false})
+  navigator.mediaDevices.getUserMedia({
+    video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},
+    audio:false
+  })
     .then(function(s){
       stream=s;
       var video=document.getElementById('cam-view');
       video.srcObject=s;
-      video.onloadedmetadata=function(){video.play();startScan();document.getElementById('cam-status').style.display='none';};
+      video.setAttribute('playsinline','true');
+      video.onloadedmetadata=function(){
+        video.play();
+        document.getElementById('cam-status').style.display='none';
+        var dot=document.getElementById('scan-active');
+        if(dot)dot.style.display='block';
+        startScan();
+      };
     })
-    .catch(function(){
+    .catch(function(err){
+      console.error('Cam error:',err);
       document.getElementById('cam-view').style.display='none';
       document.getElementById('no-cam-msg').style.display='flex';
       document.getElementById('cam-status').innerHTML='Sin acceso a cámara';
@@ -196,22 +210,26 @@ function startScan(){
   scanning=true;
   var video=document.getElementById('cam-view');
   var canvas=document.getElementById('cam-canvas');
-  var ctx=canvas.getContext('2d');
+  var ctx=canvas.getContext('2d',{willReadFrequently:true});
+
   function tick(){
     if(!scanning)return;
-    if(video.readyState===video.HAVE_ENOUGH_DATA){
-      canvas.height=video.videoHeight;canvas.width=video.videoWidth;
-      ctx.drawImage(video,0,0,canvas.width,canvas.height);
-      var img=ctx.getImageData(0,0,canvas.width,canvas.height);
-      var code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
-      if(code&&code.data){
-        var now=Date.now();
-        if(code.data!==lastCode||now-lastCodeTime>cooldown){
-          lastCode=code.data;lastCodeTime=now;
-          onQRDetected(code.data);
-          return;
+    if(video.readyState>=2&&video.videoWidth>0){
+      var w=video.videoWidth, h=video.videoHeight;
+      canvas.width=w; canvas.height=h;
+      ctx.drawImage(video,0,0,w,h);
+      try{
+        var img=ctx.getImageData(0,0,w,h);
+        var code=jsQR(img.data,img.width,img.height,{inversionAttempts:'both'});
+        if(code&&code.data){
+          var now=Date.now();
+          if(code.data!==lastCode||now-lastCodeTime>cooldown){
+            lastCode=code.data;lastCodeTime=now;
+            onQRDetected(code.data);
+            return;
+          }
         }
-      }
+      }catch(e){}
     }
     rafId=requestAnimationFrame(tick);
   }
