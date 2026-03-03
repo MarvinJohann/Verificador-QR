@@ -29,7 +29,17 @@ body{background:#1A0C10;color:white;font-family:'Montserrat',sans-serif;min-heig
 .cam-corner.br{bottom:0;right:0;border-bottom-width:3px;border-right-width:3px;}
 .scan-line{position:absolute;left:4px;right:4px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);animation:scanMove 2s ease-in-out infinite;}
 @keyframes scanMove{0%,100%{top:4px}50%{top:calc(100% - 6px)}}
-#debug-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);padding:6px 10px;font-size:.52rem;color:rgba(255,255,255,.6);text-align:center;letter-spacing:1px;}
+#debug-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(0,0,0,.85);
+  padding:8px 12px;
+  font-size:.6rem;
+  color:#FFD060;
+  text-align:center;
+  letter-spacing:1px;
+  z-index:999;
+  border-top:1px solid rgba(200,150,90,.3);
+}
 #scan-dot{position:absolute;top:10px;right:10px;width:10px;height:10px;border-radius:50%;background:#2E7D52;box-shadow:0 0 6px #2E7D52;animation:blink 1s ease-in-out infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
@@ -155,6 +165,8 @@ function showPanel(name){
   if(name==='scan'){if(stream)startScan();}
   else{stopScan();}
   if(name==='log')renderLog();
+  /* debug bar siempre visible */
+  document.getElementById('debug-bar').style.display='block';
 }
 document.getElementById('tab-scan').addEventListener('click',function(){showPanel('scan');});
 document.getElementById('tab-manual').addEventListener('click',function(){showPanel('manual');});
