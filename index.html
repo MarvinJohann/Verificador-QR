@@ -174,8 +174,11 @@ document.getElementById('tab-log').addEventListener('click',function(){showPanel
 
 /* ── CAMERA ── */
 function initCam(){
-  /* Intentar BarcodeDetector nativo primero */
-  if('BarcodeDetector' in window){
+  var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||
+    (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+
+  /* BarcodeDetector solo en no-iOS */
+  if(!isIOS&&'BarcodeDetector' in window){
     BarcodeDetector.getSupportedFormats().then(function(fmts){
       if(fmts.indexOf('qr_code')>-1){
         barcodeDetector=new BarcodeDetector({formats:['qr_code']});
@@ -184,24 +187,74 @@ function initCam(){
     }).catch(function(){});
   }
 
-  navigator.mediaDevices.getUserMedia({
-    video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},
+  var constraints={
+    video:{
+      facingMode:{ideal:'environment'},
+      width:{min:640,ideal:isIOS?1280:1920},
+      height:{min:480,ideal:isIOS?720:1080}
+    },
     audio:false
-  }).then(function(s){
-    stream=s;
-    var video=document.getElementById('cam-view');
-    video.srcObject=s;
-    video.setAttribute('playsinline','true');
-    video.play().then(function(){
-      document.getElementById('scan-dot').style.display='block';
-      setDebug('Cámara lista · Apunta al QR');
-      startScan();
-    }).catch(function(e){setDebug('Error play: '+e.message);});
-  }).catch(function(e){
-    document.getElementById('cam-view').style.display='none';
-    document.getElementById('no-cam-msg').style.display='flex';
-    setDebug('Sin cámara: '+e.message);
-  });
+  };
+
+  navigator.mediaDevices.getUserMedia(constraints)
+    .then(function(s){
+      stream=s;
+      var video=document.getElementById('cam-view');
+      video.srcObject=s;
+      video.setAttribute('playsinline','true');
+      video.setAttribute('webkit-playsinline','true');
+      video.muted=true;
+
+      /* iOS necesita interacción o evento específico */
+      video.addEventListener('canplay',function onCanPlay(){
+        video.removeEventListener('canplay',onCanPlay);
+        video.play().then(function(){
+          document.getElementById('scan-dot').style.display='block';
+          setDebug(isIOS?'iOS · Apunta al QR':'Cámara lista · Apunta al QR');
+          /* En iOS esperar un poco más antes de empezar */
+          setTimeout(startScan, isIOS?800:100);
+        }).catch(function(e){setDebug('Error play: '+e.message);});
+      });
+
+      /* Fallback si canplay no dispara */
+      setTimeout(function(){
+        if(!scanning&&video.readyState>=2){
+          video.play().then(function(){
+            document.getElementById('scan-dot').style.display='block';
+            setDebug('Cámara lista (fallback)');
+            setTimeout(startScan,500);
+          }).catch(function(){});
+        }
+      },3000);
+    })
+    .catch(function(e){
+      /* Intentar con constraints más simples en iOS */
+      if(isIOS){
+        navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false})
+          .then(function(s){
+            stream=s;
+            var video=document.getElementById('cam-view');
+            video.srcObject=s;
+            video.setAttribute('playsinline','true');
+            video.setAttribute('webkit-playsinline','true');
+            video.muted=true;
+            video.play().then(function(){
+              document.getElementById('scan-dot').style.display='block';
+              setDebug('iOS básico · Apunta al QR');
+              setTimeout(startScan,1000);
+            });
+          })
+          .catch(function(e2){
+            document.getElementById('cam-view').style.display='none';
+            document.getElementById('no-cam-msg').style.display='flex';
+            setDebug('Sin cámara: '+e2.message);
+          });
+      } else {
+        document.getElementById('cam-view').style.display='none';
+        document.getElementById('no-cam-msg').style.display='flex';
+        setDebug('Sin cámara: '+e.message);
+      }
+    });
 }
 
 function setDebug(msg){
@@ -216,21 +269,29 @@ function startScan(){
   var canvas=document.getElementById('cam-canvas');
   var ctx=canvas.getContext('2d',{willReadFrequently:true});
   var frameCount=0;
+  var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||
+    (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var skipFrames=isIOS?6:3;
 
   function tick(){
     if(!scanning)return;
     frameCount++;
+    if(frameCount%skipFrames!==0){rafId=requestAnimationFrame(tick);return;}
 
-    /* Cada 3 frames para no sobrecargar */
-    if(frameCount%3!==0){rafId=requestAnimationFrame(tick);return;}
-
-    if(!video.videoWidth||video.paused||video.ended){rafId=requestAnimationFrame(tick);return;}
+    if(!video.videoWidth||video.paused||video.ended||video.readyState<2){
+      setDebug('Esperando video... readyState:'+video.readyState);
+      rafId=requestAnimationFrame(tick);
+      return;
+    }
 
     var w=video.videoWidth,h=video.videoHeight;
-    canvas.width=w;canvas.height=h;
-    ctx.drawImage(video,0,0,w,h);
+    if(w===0||h===0){rafId=requestAnimationFrame(tick);return;}
 
-    /* Método 1: BarcodeDetector nativo */
+    canvas.width=w;canvas.height=h;
+    try{ctx.drawImage(video,0,0,w,h);}
+    catch(e){rafId=requestAnimationFrame(tick);return;}
+
+    /* BarcodeDetector nativo */
     if(barcodeDetector){
       barcodeDetector.detect(canvas).then(function(codes){
         if(codes.length>0){
@@ -238,7 +299,7 @@ function startScan(){
           var now=Date.now();
           if(raw!==lastCode||now-lastCodeTime>cooldown){
             lastCode=raw;lastCodeTime=now;
-            setDebug('QR detectado (nativo)');
+            setDebug('¡QR detectado!');
             onQRDetected(raw);
             return;
           }
@@ -248,7 +309,7 @@ function startScan(){
       return;
     }
 
-    /* Método 2: jsQR */
+    /* jsQR */
     try{
       var imageData=ctx.getImageData(0,0,w,h);
       var code=jsQR(imageData.data,imageData.width,imageData.height,{inversionAttempts:'both'});
@@ -256,12 +317,14 @@ function startScan(){
         var now=Date.now();
         if(code.data!==lastCode||now-lastCodeTime>cooldown){
           lastCode=code.data;lastCodeTime=now;
-          setDebug('QR detectado (jsQR)');
+          setDebug('¡QR detectado! (jsQR)');
           onQRDetected(code.data);
           return;
         }
+      } else {
+        if(frameCount%30===0)setDebug('Buscando QR... '+w+'x'+h);
       }
-    }catch(e){}
+    }catch(e){setDebug('Error jsQR: '+e.message);}
 
     rafId=requestAnimationFrame(tick);
   }
