@@ -5,7 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Verificador — Xóchitl & Sarbjit</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script>
+/* Fallback si jsQR no carga */
+window.addEventListener('load',function(){
+  if(typeof jsQR==='undefined'){
+    var s=document.createElement('script');
+    s.src='https://unpkg.com/jsqr@1.4.0/dist/jsQR.js';
+    s.onload=function(){setDebug('jsQR cargado (fallback)');};
+    s.onerror=function(){setDebug('ERROR: jsQR no pudo cargar');};
+    document.head.appendChild(s);
+  }
+});
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{--gold:#C8965A;--pk:#D4608A;--cream:#FEF9F6;--text:#1A0C10;--green:#2E7D52;--red:#C0392B;}
@@ -310,6 +322,11 @@ function startScan(){
     }
 
     /* jsQR */
+    if(typeof jsQR==='undefined'){
+      setDebug('Cargando jsQR...');
+      rafId=requestAnimationFrame(tick);
+      return;
+    }
     try{
       var imageData=ctx.getImageData(0,0,w,h);
       var code=jsQR(imageData.data,imageData.width,imageData.height,{inversionAttempts:'both'});
